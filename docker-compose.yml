@@ -1,0 +1,42 @@
+version: '2'
+
+networks:
+  app-tier:
+
+volumes:
+  postgres-data:
+
+services:
+  Etcd1:
+    image: 'bitnami/etcd:latest'
+    env_file: etcd/etcd.env
+    ports:
+      - 2379:2379
+      - 2380:2380
+    networks: [ app-tier ]
+    container_name: etcd1
+
+  patroni:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: patroni1
+    networks: [ app-tier ]
+    ports:
+      - "8008:8008"
+      - "5432:5432"
+    user: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    env_file: patroni/patroni.env
+
+  haproxy:
+    image: haproxy
+    container_name: haproxy1
+    networks: [ app-tier ]
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+      - "7000:7000"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg

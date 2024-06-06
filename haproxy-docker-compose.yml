@@ -1,0 +1,16 @@
+version: '2'
+
+networks:
+  app-tier:
+
+services:
+  haproxy:
+    image: haproxy
+    container_name: haproxy1
+    networks: [ app-tier ]
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+      - "7000:7000"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg

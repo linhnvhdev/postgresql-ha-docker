@@ -1,0 +1,14 @@
+version: '2'
+
+networks:
+  app-tier:
+
+services:
+  Etcd1:
+    image: 'bitnami/etcd:latest'
+    env_file: etcd/etcd.env
+    ports:
+      - 2379:2379
+      - 2380:2380
+    networks: [ app-tier ]
+    container_name: etcd1
