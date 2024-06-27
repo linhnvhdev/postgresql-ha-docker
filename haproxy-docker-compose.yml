@@ -1,16 +1,48 @@
-version: '2'
-
-networks:
-  app-tier:
-
+version: "3"
 services:
-  haproxy:
-    image: haproxy
-    container_name: haproxy1
-    networks: [ app-tier ]
+  haproxy_master:
+    container_name: haproxy-master
+    user: root
+    build:
+      context: ./haproxy
+      dockerfile: Dockerfile
     ports:
-      - "5000:5000"
-      - "5001:5001"
-      - "7000:7000"
+      - "5002:5002"
+      - "5003:5003"
+      - "7001:7001"
     volumes:
-      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+      - ./haproxy/haproxy-test.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./haproxy/keepalived-master.conf:/etc/keepalived/keepalived.conf:ro
+      - ./haproxy/haproxy-ha-check:/usr/lib/keepalived/haproxy-ha-check
+      - ./haproxy/haproxy-ha-notify:/usr/lib/keepalived/haproxy-ha-notify
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    environment:
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+      HA_NODE_1: ${HA_NODE_1}
+      HA_NODE_2: ${HA_NODE_2}
+      ALLOCATION_ID: ${ALLOCATION_ID}
+
+  haproxy_slave:
+    container_name: haproxy-slave
+    build:
+      context: ./haproxy
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5002"
+      - "5003:5003"
+      - "7001:7001"
+    volumes:
+      - ./haproxy/haproxy-test.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./haproxy/keepalived-slave.conf:/etc/keepalived/keepalived.conf:ro
+      - ./haproxy/haproxy-ha-check:/usr/lib/keepalived/haproxy-ha-check
+      - ./haproxy/haproxy-ha-notify:/usr/lib/keepalived/haproxy-ha-notify
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    environment:
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+      HA_NODE_1: ${HA_NODE_1}
+      HA_NODE_2: ${HA_NODE_2}
+      ALLOCATION_ID: ${ALLOCATION_ID}

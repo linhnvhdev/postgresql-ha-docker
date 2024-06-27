@@ -1,13 +1,28 @@
 scope: postgres_cluster
 namespace: /pg_cluster/
-name: pg_node1
+name: pg_node2
 
 restapi:
     listen: 0.0.0.0:8008 
-    connect_address: 172.31.84.236:8008
+    connect_address: 172.31.31.131:8008
+    certfile: /etc/ssl/etcd/patroni.crt
+    keyfile: /etc/ssl/etcd/patroni.key
+    cafile: /etc/ssl/etcd/ca.crt
+    #verify_client: required
+    #ciphers: "ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:!SSLv1:!SSLv2:!SSLv3:!TLSv1:!TLSv1.1"
+
+ctl:
+    insecure: false
+    certfile: /etc/ssl/etcd/patroni.crt
+    keyfile: /etc/ssl/etcd/patroni.key
+    cacert: /etc/ssl/etcd/ca.crt
 
 etcd:
-  hosts: 172.31.84.236:2379, 172.31.94.56:2379
+    hosts: 172.31.30.176:2379, 172.31.31.131:2379, 172.31.25.208:2379
+    protocol: https
+    cacert: /etc/ssl/etcd/ca.crt
+    cert: /etc/ssl/etcd/etcd2.crt
+    key: /etc/ssl/etcd/etcd2.key
 
 bootstrap:
     dcs:
@@ -21,6 +36,10 @@ bootstrap:
                 max_connections: 550
                 max_locks_per_transaction: 512
                 max_worker_processes: 27
+                # ssl: true
+                # ssl_cert_file: /etc/ssl/etcd/patroni.crt
+                # ssl_key_file: /etc/ssl/etcd/patroni.key
+                # ssl_ca_file: /etc/ssl/etcd/ca.crt
 
     initdb:
     - encoding: UTF8
@@ -37,13 +56,14 @@ bootstrap:
 
 postgresql:
     listen: 0.0.0.0:5432
-    connect_address: 172.31.84.236:5432
+    connect_address: 172.31.31.131:5432
     #config_dir: /config
     data_dir: /var/lib/postgresql/data
     pg_hba:
         - host replication replicator 127.0.0.1/32 md5
-        - host replication replicator 172.31.84.236/32 md5
-        - host replication replicator 172.31.94.56/32 md5
+        - host replication replicator 172.31.30.176/32 md5
+        - host replication replicator 172.31.31.131/32 md5
+        - host replication replicator 172.31.25.208/32 md5
         - host all all 0.0.0.0/0 md5
     authentication:
         replication:
@@ -52,6 +72,11 @@ postgresql:
         superuser:
             username: postgres
             password: supersecret
+    # parameters:
+    #    ssl: on
+    #    ssl_cert_file: /etc/ssl/etcd/patroni.crt
+    #    ssl_key_file: /etc/ssl/etcd/patroni.key
+    #    ssl_ca_file: /etc/ssl/etcd/ca.crt
 
 tags:
     nofailover: false
